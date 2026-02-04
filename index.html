@@ -1,210 +1,625 @@
-!DOCTYPE html
-html lang=en
-head
-  meta charset=UTF-8 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+  <meta name="description" content="A quiet curation meant to be lived with rather than skimmed through." />
+  <meta name="theme-color" content="#f6f4f1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>drìft</title>
 
-  meta name=viewport
-        content=width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover 
-
-  meta name=description
-        content=A quiet curation meant to be lived with rather than skimmed through. 
-
-  meta name=theme-color content=#f6f4f1 
-  meta name=apple-mobile-web-app-capable content=yes 
-  meta name=apple-mobile-web-app-status-bar-style content=default 
-
-  !-- Favicon --
-  link rel=icon type=imagepng href=icon.png
-  link rel=apple-touch-icon href=icon.png
-
-  titledrìfttitle
-
-  !-- Resist Mono --
-  style
+  <!-- Resist Mono font -->
+  <style>
     @font-face {
-      font-family 'Resist Mono';
-      src url('httpsvelvetyne.frfontsresist-monoResistMono-Regular.woff2') format('woff2');
-      font-weight 400;
-      font-style normal;
-      font-display swap;
+      font-family: 'Resist Mono';
+      src: url('https://velvetyne.fr/fonts/resist-mono/ResistMono-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
     }
-  style
+  </style>
 
-  style
-    root {
-      --bg-start #f6f4f1;
-      --bg-end #ece9e4;
-      --text #2b2b2b;
-      --muted #7a7a7a;
+  <style>
+    :root {
+      --bg-start: #f6f4f1;
+      --bg-end: #ece9e4;
+      --text: #2b2b2b;
+      --muted: #7a7a7a;
     }
 
-     {
-      box-sizing border-box;
-      margin 0;
-      padding 0;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      touch-action: manipulation;
     }
 
     body {
-      font-family 'Resist Mono', monospace;
-      background linear-gradient(180deg, var(--bg-start), var(--bg-end));
-      color var(--text);
-      min-height 150vh;
-      padding 20px;
-      -webkit-font-smoothing antialiased;
+      font-family: 'Resist Mono', monospace;
+      background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      color: var(--text);
+      min-height: 150vh;
+      min-height: 150dvh; /* Dynamic viewport height for mobile */
+      padding: 20px;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: filter 0.3s ease;
     }
 
-     Sticky header 
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0);
+      pointer-events: none;
+      transition: background 0.4s ease;
+      z-index: 1;
+    }
+
+    body.scrolled::before {
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    /* Blur everything except the listen button when scrolled */
+    body.scrolled .title,
+    body.scrolled .description {
+      filter: blur(1.5px);
+    }
+
+    /* Ensure content is above the overlay */
     .sticky-header {
-      position fixed;
-      top 0;
-      left 0;
-      right 0;
-      text-align center;
-      padding 16px;
-      background rgba(246, 244, 241, 0.95);
-      backdrop-filter blur(10px);
-      border-bottom 1px solid rgba(0,0,0,0.08);
-      opacity 0;
-      transform translateY(-20px);
-      transition all 0.4s ease;
-      pointer-events none;
-      z-index 100;
+      position: relative;
+      z-index: 100;
+    }
+    
+    .container,
+    .footer {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Wind particles */
+    .wind-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .wind-container.active {
+      opacity: 1;
+    }
+
+    .wind-particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(123, 123, 123, 0.6);
+      border-radius: 50%;
+      animation: windDrift var(--duration) linear infinite;
+      animation-delay: var(--delay);
+    }
+
+    .wind-particle.line {
+      width: 30px;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, rgba(123, 123, 123, 0.5), transparent);
+      border-radius: 0;
+    }
+
+    @keyframes windDrift {
+      0% {
+        transform: translate(var(--start-x), var(--start-y)) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--end-x), var(--end-y)) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Clock */
+    .clock {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      z-index: 10;
+      opacity: 0.7;
+      font-weight: 300;
+    }
+
+    /* Sticky header */
+    .sticky-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 16px 20px;
+      background: rgba(246, 244, 241, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(123, 123, 123, 0.1);
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
     }
 
     .sticky-header.visible {
-      opacity 1;
-      transform translateY(0);
-      pointer-events auto;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
-    .sticky-header h2 {
-      font-size 22px;
-      font-weight 400;
-      letter-spacing 0.04em;
+    .sticky-header .title {
+      font-size: 24px;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin: 0;
+      animation: none;
+      position: relative;
     }
 
-     Main container 
+    .sticky-header .title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--underline-width, 0px);
+      height: 1px;
+      background: var(--muted);
+      transition: none;
+      will-change: width;
+    }
+
+    .sticky-header a {
+      color: var(--text);
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .sticky-header a:hover {
+      opacity: 0.6;
+    }
+
+    /* Main container */
     .container {
-      max-width 520px;
-      margin 120px auto 0;
-      text-align center;
-      padding 40px 28px;
+      max-width: 520px;
+      width: 100%;
+      padding: 40px 28px;
+      text-align: center;
+      margin: 120px auto 0;
     }
 
-    h1 {
-      font-size 48px;
-      font-weight 400;
-      letter-spacing 0.04em;
-      margin-bottom 24px;
+    .title {
+      font-size: 48px;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+      animation: fadeIn 0.8s ease-out;
     }
 
     .description {
-      font-size 15px;
-      line-height 1.7;
-      color var(--muted);
-      margin-bottom 24px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--muted);
+      margin-bottom: 20px;
+      animation: fadeIn 1s ease-out 0.2s both;
+      position: relative;
+      white-space: normal;
+      word-break: keep-all;
+      text-align: center;
+    }
+    
+    .description:last-of-type {
+      margin-bottom: 60px;
     }
 
-    .btn {
-      display inline-block;
-      margin-top 32px;
-      padding 12px 32px;
-      font-size 13px;
-      letter-spacing 0.08em;
-      text-decoration none;
-      color var(--bg-start);
-      background var(--text);
-      border-radius 4px;
-      transition transform 0.3s ease, opacity 0.3s ease;
+    .description .letter {
+      display: inline-block;
+      transition: none;
+      will-change: transform, opacity;
     }
 
-    .btnhover {
-      transform translateY(-2px);
-      opacity 0.85;
+    .description .word {
+      display: inline-block;
+      white-space: nowrap;
     }
 
-    .clock {
-      position fixed;
-      bottom 56px;
-      left 50%;
-      transform translateX(-50%);
-      font-size 11px;
-      color var(--muted);
-      letter-spacing 0.08em;
-      opacity 0.7;
+    /* Button */
+    .btn-listen {
+      display: inline-block;
+      padding: 12px 32px;
+      margin-top: 24px;
+      font-family: 'Resist Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: var(--bg-start);
+      background: var(--text);
+      border: 1px solid var(--text);
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.3s ease, opacity 0.4s ease, transform 0.4s ease;
+      animation: fadeIn 1.2s ease-out 0.4s both;
+      cursor: pointer;
+      filter: none !important;
     }
 
+    .btn-listen:hover {
+      background: rgba(43, 43, 43, 0.85);
+      transform: translateY(-2px);
+    }
+
+    /* Footer */
     .footer {
-      position fixed;
-      bottom 0;
-      left 0;
-      right 0;
-      text-align center;
-      padding 20px;
-      font-size 12px;
-      letter-spacing 0.08em;
-      color var(--muted);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      animation: fadeIn 1.4s ease-out 0.6s both;
     }
 
-    @media (max-width 600px) {
-      h1 { font-size 40px; }
-      .description { font-size 14px; }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-  style
-head
 
-body
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+      .container {
+        padding: 30px 20px;
+        margin: 80px auto 0;
+      }
+      .title {
+        font-size: 40px;
+        margin-bottom: 20px;
+      }
+      .description {
+        font-size: 14px;
+        margin-bottom: 48px;
+      }
+      .btn-listen {
+        padding: 10px 28px;
+        font-size: 12px;
+        margin-top: 20px;
+      }
+      .footer {
+        padding: 20px;
+        font-size: 11px;
+      }
+      .clock {
+        bottom: 50px;
+        font-size: 10px;
+      }
+      .sticky-header {
+        padding: 12px 16px;
+      }
+      .sticky-header .title {
+        font-size: 20px;
+      }
+      .sticky-header .title::after {
+        bottom: -6px;
+      }
+    }
 
-  header class=sticky-header id=stickyHeader
-    h2drìfth2
-  header
+    @media (max-width: 400px) {
+      .title {
+        font-size: 36px;
+      }
+      .description {
+        font-size: 13px;
+      }
+      .btn-listen {
+        padding: 10px 24px;
+        font-size: 11px;
+      }
+    }
 
-  main class=container
-    h1drìfth1
+    /* Tablet adjustments */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .container {
+        padding: 36px 32px;
+        margin: 100px auto 0;
+      }
+      .title {
+        font-size: 44px;
+      }
+      .description {
+        margin-bottom: 56px;
+      }
+    }
 
-    p class=description
-      A quiet curation meant to be lived with rather than skimmed through,
-      this space invites listening closely and returning without expectation.
-    p
+    /* Touch device optimizations */
+    @media (hover: none) and (pointer: coarse) {
+      .btn-listen:hover {
+        background: var(--text);
+        transform: none;
+      }
+    }
 
-    p class=description
-      The selection isn’t fixed — it shifts with time,
-      and in doing so becomes drìft.
-    p
+    /* Landscape mobile */
+    @media (max-width: 900px) and (orientation: landscape) {
+      body {
+        min-height: 200vh;
+      }
+      .container {
+        margin: 60px auto 0;
+      }
+      .title {
+        font-size: 36px;
+        margin-bottom: 16px;
+      }
+      .description {
+        font-size: 13px;
+        margin-bottom: 40px;
+      }
+    }
 
-    a class=btn
-       href=httpsmusic.apple.cominplaylistdr%C3%ACftpl.u-gxblk84tbANER9g
-       target=_blank
-       rel=noopener noreferrer
+    /* High DPI displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .wind-particle {
+        width: 4px;
+        height: 4px;
+      }
+      .wind-particle.line {
+        height: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Wind particles container -->
+  <div class="wind-container" id="windContainer"></div>
+
+  <!-- Sticky header that appears on scroll -->
+  <header class="sticky-header" id="stickyHeader">
+    <h2 class="title">drìft</h2>
+  </header>
+
+  <main class="container">
+    <h1 class="title">drìft</h1>
+
+    <p class="description">
+      A quiet curation meant to be lived with rather than skimmed through, this space invites listening closely and returning without expectation.
+    </p>
+    
+    <p class="description">
+      The selection isn't fixed — it shifts with time, and in doing so becomes drìft.
+    </p>
+
+    <a href="https://music.apple.com/in/playlist/dr%C3%ACft/pl.u-gxblk84tbANER9g" target="_blank" rel="noopener noreferrer" class="btn-listen">
       LISTEN
-    a
-  main
+    </a>
+  </main>
 
-  div class=clock id=clock000000div
+  <div class="clock" id="clock">00:00:00</div>
 
-  div class=footerfor nowdiv
+  <div class="footer">
+    for now
+  </div>
 
-  script
+  <script>
+    // Elements
     const stickyHeader = document.getElementById('stickyHeader');
-    const clock = document.getElementById('clock');
+    const mainTitle = document.querySelector('.container .title');
+    const descriptions = document.querySelectorAll('.description');
+    const btnListen = document.querySelector('.btn-listen');
+    const windContainer = document.getElementById('windContainer');
+    const clockElement = document.getElementById('clock');
+    const body = document.body;
 
+    // Clock update
     function updateClock() {
       const now = new Date();
-      clock.textContent =
-        now.toLocaleTimeString('en-GB', { hour12 false });
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
     }
-
+    
     updateClock();
     setInterval(updateClock, 1000);
 
-    window.addEventListener('scroll', () = {
-      if (window.scrollY  80) {
+    // Create wind particles
+    function createWindParticles() {
+      // Reduce particles on mobile for better performance
+      const isMobile = window.innerWidth <= 768;
+      const particleCount = isMobile ? 40 : 60;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        const isLine = Math.random() > 0.5;
+        particle.className = isLine ? 'wind-particle line' : 'wind-particle';
+        
+        // Random starting position
+        const startX = Math.random() * -100;
+        const startY = Math.random() * 100;
+        const endX = startX + 200 + Math.random() * 300;
+        const endY = startY + (Math.random() - 0.5) * 100;
+        const duration = 3 + Math.random() * 4;
+        const delay = Math.random() * 3;
+        
+        particle.style.setProperty('--start-x', `${startX}vw`);
+        particle.style.setProperty('--start-y', `${startY}vh`);
+        particle.style.setProperty('--end-x', `${endX}vw`);
+        particle.style.setProperty('--end-y', `${endY}vh`);
+        particle.style.setProperty('--duration', `${duration}s`);
+        particle.style.setProperty('--delay', `${delay}s`);
+        
+        windContainer.appendChild(particle);
+      }
+    }
+
+    // Initialize wind particles
+    createWindParticles();
+
+    // Split description text into words, then into letters for both paragraphs
+    let letterIndex = 0;
+    const allLetterElements = [];
+    
+    descriptions.forEach(description => {
+      const descriptionText = description.textContent;
+      const words = descriptionText.split(' ');
+      
+      const wrappedHTML = words.map(word => {
+        const letters = word.split('').map(char => {
+          const html = `<span class="letter" data-index="${letterIndex}">${char}</span>`;
+          letterIndex++;
+          return html;
+        }).join('');
+        return `<span class="word">${letters}</span>`;
+      }).join(' ');
+      
+      description.innerHTML = wrappedHTML;
+      
+      // Collect all letter elements
+      description.querySelectorAll('.letter').forEach(el => allLetterElements.push(el));
+    });
+
+    const letterElements = allLetterElements;
+    const totalLetters = letterElements.length;
+
+    // Get the position of the sticky header underline
+    function getUnderlinePosition() {
+      const titleRect = stickyHeader.querySelector('.title').getBoundingClientRect();
+      return {
+        x: titleRect.left + titleRect.width / 2,
+        y: titleRect.bottom + 8
+      };
+    }
+
+    window.addEventListener('scroll', function() {
+      const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Add grey overlay and wind when scrolled
+      if (currentScroll > 50) {
+        body.classList.add('scrolled');
+        windContainer.classList.add('active');
+      } else {
+        body.classList.remove('scrolled');
+        windContainer.classList.remove('active');
+      }
+
+      // Show sticky header when scrolled down 80px
+      if (currentScroll > 80) {
         stickyHeader.classList.add('visible');
       } else {
         stickyHeader.classList.remove('visible');
       }
-    });
-  script
 
-body
-html
+      // Fade out main title as user scrolls down
+      const scrollFade = Math.max(0, 1 - (currentScroll / 200));
+      mainTitle.style.opacity = scrollFade;
+
+      // Animate letters being sucked into the underline
+      // Letters start disappearing from scroll position 50 to 250
+      const scrollStart = 50;
+      const scrollEnd = 250;
+      const scrollRange = scrollEnd - scrollStart;
+      const scrollProgress = Math.max(0, Math.min(1, (currentScroll - scrollStart) / scrollRange));
+
+      // Calculate how many letters should be "sucked in"
+      const lettersToAnimate = Math.floor(scrollProgress * totalLetters);
+
+      letterElements.forEach((letter, index) => {
+        if (index < lettersToAnimate) {
+          // Calculate progress for this specific letter (0 to 1)
+          const letterProgress = Math.min(1, (scrollProgress * totalLetters - index));
+          
+          // Get letter position
+          const rect = letter.getBoundingClientRect();
+          const underline = getUnderlinePosition();
+          
+          // Calculate distance to underline
+          const deltaX = underline.x - (rect.left + rect.width / 2);
+          const deltaY = underline.y - (rect.top + rect.height / 2);
+          
+          // Apply transformation based on progress
+          const moveX = deltaX * letterProgress;
+          const moveY = deltaY * letterProgress;
+          const scale = 1 - (0.9 * letterProgress);
+          const opacity = 1 - letterProgress;
+          
+          letter.style.transform = `translate(${moveX}px, ${moveY}px) scale(${scale})`;
+          letter.style.opacity = opacity;
+        } else {
+          // Reset letters that haven't been animated yet
+          letter.style.transform = '';
+          letter.style.opacity = '';
+        }
+      });
+
+      // Grow the underline based on scroll progress
+      const underlineWidth = Math.min(120, scrollProgress * 120);
+      document.documentElement.style.setProperty('--underline-width', `${underlineWidth}px`);
+
+      // Button moves up and positions perfectly below the underline on next line
+      // When fully scrolled, button should be positioned fixed below sticky header
+      if (currentScroll > 140) {
+        // Calculate button's current position
+        const btnRect = btnListen.getBoundingClientRect();
+        const stickyBottom = stickyHeader.getBoundingClientRect().bottom;
+        
+        // Target position: 24px below the sticky header (enough space for underline + padding)
+        const targetFromTop = stickyBottom + 24;
+        const moveY = targetFromTop - btnRect.top;
+        
+        btnListen.style.opacity = 1;
+        btnListen.style.transform = `translateY(${moveY}px)`;
+        btnListen.style.position = 'relative';
+      } else {
+        // Button fades and moves slightly during initial scroll
+        const btnFade = Math.max(0, 1 - (currentScroll / 140));
+        const btnTransform = Math.min(30, currentScroll / 6);
+        btnListen.style.opacity = btnFade;
+        btnListen.style.transform = `translateY(-${btnTransform}px)`;
+        btnListen.style.position = 'relative';
+      }
+    });
+  </script>
+
+</body>
+</html>
